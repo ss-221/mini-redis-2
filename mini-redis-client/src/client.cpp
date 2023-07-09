@@ -63,7 +63,7 @@ int InitClient(int port)
         {
             if(strcmp(msgBuffer, EXIT_CODE) == 0)
             {
-                printf("Received EXIT.");
+                std::cout << "EXIT received" << std::endl;
                 break;
             }
             int len = 0;

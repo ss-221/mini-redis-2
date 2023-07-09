@@ -256,8 +256,14 @@ namespace data_handler
         }
 
         std::scoped_lock lock(m_lock);
-        if(dbKeys.find(tokens[1]) == dbKeys.end() || hasExpired(tokens[1]))
+        if(dbKeys.find(tokens[1]) == dbKeys.end())
         {
+            return "(nil)";
+        }
+
+        if(hasExpired(tokens[1]))
+        {
+            dbKeys.erase(tokens[1]);
             return "(nil)";
         }
 
@@ -304,7 +310,8 @@ namespace data_handler
 
         if(GetCurrTime() >= dbKeys[tokens[1]].getExpiryTime())
         {
-             return "(integer) -2";
+            dbKeys.erase(tokens[1]);
+            return "(integer) -2";
         }
 
         auto secs = duration_cast<seconds>(dbKeys[tokens[1]].getExpiryTime() - GetCurrTime());
@@ -423,7 +430,7 @@ namespace data_handler
         string keyNames = "";
         int count = 0;
         std::scoped_lock lock(m_lock);
-
+        vector<string> expiredKeys(dbKeys.size());
         for(auto it = dbKeys.begin(); it != dbKeys.end(); ++it)
         {
             if(!hasExpired(it->first))
@@ -436,11 +443,22 @@ namespace data_handler
                     keyNames += "\"\n";
                 }
             }
+
+            else
+            {
+                expiredKeys.push_back(it->first);
+            }
         }
+
+        for(auto& str : expiredKeys)
+        {
+            dbKeys.erase(str);
+        }
+
         keyNames.pop_back();
         if(count == 0)
         {
-            return "empty array";
+            return "(empty array)";
         }
 
         return keyNames;
