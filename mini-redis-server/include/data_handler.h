@@ -42,6 +42,7 @@ namespace data_handler
             string HandleTTL(vector<string>&);
             string HandleEXPIRE(vector<string>&);
             string HandleKEYS(vector<string>&);
+            bool hasExpired(string&);
         private:
             std::mutex m_lock;
             std::unordered_map<string, MetaData> dbKeys;

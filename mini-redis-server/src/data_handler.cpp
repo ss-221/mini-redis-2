@@ -86,6 +86,17 @@ namespace data_handler
         return m_ExpiryTime;
     }
 
+    bool DB::hasExpired(string& key)
+    {
+        milliseconds currTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+        if(currTime >= dbKeys[key].getExpiryTime())
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     string DB::HandleSET(vector<string>& tokens)
     {
         if(tokens.size() < 3)
@@ -114,7 +125,23 @@ namespace data_handler
 
     string DB::HandleDEL(vector<string>& tokens)
     {
-        return "DEL";
+        if(tokens.size() < 2)
+        {
+            return "(error) ERR wrong number of arguments for 'del' command";
+        }
+        std::scoped_lock locl(m_lock);
+
+        int delCount = 0;
+        for(int idx = 1; idx < tokens.size(); idx++)
+        {
+            if(dbKeys.find(tokens[idx]) != dbKeys.end() && !hasExpired(tokens[idx]))
+            {
+                dbKeys.erase(tokens[idx]);
+                delCount += 1;
+            }
+        }
+
+        return string("(integer) " + std::to_string(delCount));
     }
 
     string DB::HandleTTL(vector<string>& tokens)
