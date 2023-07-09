@@ -1,4 +1,5 @@
 #include <server.h>
+#include <data_handler.h>
 
 void socket_helper::GetError(const char *exception_message)
 {
@@ -150,7 +151,7 @@ void socket_helper::ServerSocket::ClientHandler(int socket)
         {
             buffer[len] = 0;
             std::cout << "Message received: " << buffer << std::endl;
-            //ProcessCommand(msgBuffer);
+            std::string response = data_handler::ProcessCommand(buffer);
         }
 
         if(strcmp(buffer, "EXIT") == 0)
