@@ -16,13 +16,15 @@ namespace data_handler
     using std::string;
     using std::vector;
     std::string ProcessCommand(char*);
+    milliseconds GetCurrTime();
     
     class MetaData
     {
         public:
         MetaData() = default;
         string getValue() const;
-        milliseconds getExpiryTime();
+        milliseconds getExpiryTime() const;
+        void setExpiryTime(const milliseconds&);
         void enableTTL();
         void disableTTL();
         bool hasTTL();

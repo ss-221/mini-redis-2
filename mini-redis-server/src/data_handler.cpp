@@ -8,6 +8,11 @@ namespace data_handler
     DB db;
     using std::cout;
 
+    milliseconds GetCurrTime()
+    {
+        return duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+    }
+
     std::string ProcessCommand(char* command)
     {
         std::stringstream ss(command);
@@ -81,14 +86,19 @@ namespace data_handler
         return m_hasTTL;
     }
 
-    milliseconds MetaData::getExpiryTime()
+    milliseconds MetaData::getExpiryTime() const
     {
         return m_ExpiryTime;
     }
 
+    void MetaData::setExpiryTime(const milliseconds& ms)
+    {
+        m_ExpiryTime = ms;
+    }
+
     bool DB::hasExpired(string& key)
     {
-        milliseconds currTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+        milliseconds currTime = GetCurrTime();
         if(currTime >= dbKeys[key].getExpiryTime())
         {
             return true;
