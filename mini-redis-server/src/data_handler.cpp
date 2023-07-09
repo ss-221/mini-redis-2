@@ -420,7 +420,7 @@ namespace data_handler
             return "(error) ERR wrong number of arguments for 'keys' command";
         }
 
-        string keyNames = "\n";
+        string keyNames = "";
         int count = 0;
         std::scoped_lock lock(m_lock);
 

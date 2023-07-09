@@ -46,10 +46,12 @@ int InitClient(int port)
 
     else
     {
-        printf("Successfully connected to the server\n");
+        std::cout << "Successfully connected to the server" << std::endl;
     }
 
     char msgBuffer[max_buffer_size] = {0};
+
+    std::cout << "> ";
 
     while(std::cin.getline(msgBuffer, max_buffer_size))
     {
@@ -59,8 +61,6 @@ int InitClient(int port)
         }
         else
         {
-            std::cout << "Sent: " << msgBuffer << std::endl;
-
             if(strcmp(msgBuffer, EXIT_CODE) == 0)
             {
                 printf("Received EXIT.");
@@ -71,7 +71,8 @@ int InitClient(int port)
             if((len = read(socketID, msgBuffer, max_buffer_size)) > 0)
             {
                 msgBuffer[len] = 0;
-                std::cout << "Received: " << msgBuffer << std::endl;
+                std::cout << msgBuffer << std::endl;
+                std::cout << "\n> ";
             }
             else
             {
