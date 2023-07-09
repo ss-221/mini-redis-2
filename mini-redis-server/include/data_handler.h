@@ -17,12 +17,14 @@ namespace data_handler
     using std::vector;
     std::string ProcessCommand(char*);
     milliseconds GetCurrTime();
+    bool isValidNum(string&);
     
     class MetaData
     {
         public:
         MetaData() = default;
         string getValue() const;
+        void setValue(string& );
         milliseconds getExpiryTime() const;
         void setExpiryTime(const milliseconds&);
         void enableTTL();
