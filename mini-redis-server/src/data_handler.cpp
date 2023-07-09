@@ -73,7 +73,7 @@ namespace data_handler
 
     void MetaData::enableTTL()
     {
-        m_hasTTL = true;;
+        m_hasTTL = true;
     }
 
     bool MetaData::hasTTL()
@@ -115,7 +115,7 @@ namespace data_handler
         }
 
         std::scoped_lock lock(m_lock);
-        if(dbKeys.find(tokens[1]) == dbKeys.end())
+        if(dbKeys.find(tokens[1]) == dbKeys.end() || hasExpired(tokens[1]))
         {
             return "(nil)";
         }
