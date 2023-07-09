@@ -8,6 +8,7 @@
 #include <chrono>
 #include <unordered_map>
 #include <mutex>
+#include <algorithm>
 
 namespace data_handler
 {
@@ -21,10 +22,15 @@ namespace data_handler
         public:
         MetaData() = default;
         string getValue() const;
+        milliseconds getExpiryTime();
+        void enableTTL();
+        void disableTTL();
+        bool hasTTL();
 
         private:
             string m_Value;
             milliseconds m_ExpiryTime;
+            bool m_hasTTL;
     };
 
     class DB
