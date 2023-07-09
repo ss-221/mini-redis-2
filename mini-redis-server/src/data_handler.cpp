@@ -18,27 +18,27 @@ namespace data_handler
 
         if(tokens.front() == "SET")
         {
-
+            temp = "SET";
         }
 
         else if(tokens.front() == "GET")
         {
-
+            temp = "GET";
         }
 
         else if(tokens.front() == "DEL")
         {
-
+            temp = "DEL";
         }
 
         else if(tokens.front() == "TTL")
         {
-
+            temp = "TTL";
         }
 
         else if(tokens.front() == "EXPIRE")
         {
-
+            temp = "EXPIRE";
         }
 
         else

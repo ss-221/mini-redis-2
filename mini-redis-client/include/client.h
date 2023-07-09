@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <iostream>
+#include <unistd.h>
 
 #define max_buffer_size 4096
 #define EXIT_CODE "EXIT"

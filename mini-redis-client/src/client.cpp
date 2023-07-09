@@ -55,19 +55,31 @@ int InitClient(int port)
     {
         if(send(socketID, msgBuffer, strlen(msgBuffer), 0) < 0)
         {
-            printf("Failed to send");
+            PrintErrorMsg("Failed to send");
         }
         else
         {
             std::cout << "Sent: " << msgBuffer << std::endl;
-        }
-        if(strcmp(msgBuffer, EXIT_CODE) == 0)
-        {
-            printf("Received EXIT.");
-            break;
+
+            if(strcmp(msgBuffer, EXIT_CODE) == 0)
+            {
+                printf("Received EXIT.");
+                break;
+            }
+            int len = 0;
+
+            if((len = read(socketID, msgBuffer, max_buffer_size)) > 0)
+            {
+                msgBuffer[len] = 0;
+                std::cout << "Received: " << msgBuffer << std::endl;
+            }
+            else
+            {
+                PrintErrorMsg("Failed to receive");
+            }
         }
     }
-
+    close(socketID);
     return EXIT_SUCCESS;
 
 }

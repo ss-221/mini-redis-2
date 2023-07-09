@@ -152,6 +152,11 @@ void socket_helper::ServerSocket::ClientHandler(int socket)
             buffer[len] = 0;
             std::cout << "Message received: " << buffer << std::endl;
             std::string response = data_handler::ProcessCommand(buffer);
+
+            if(send(socket, response.c_str(), strlen(response.c_str()), 0) < 0)
+            {
+                GetError("Failed to send");
+            }
         }
 
         if(strcmp(buffer, "EXIT") == 0)
