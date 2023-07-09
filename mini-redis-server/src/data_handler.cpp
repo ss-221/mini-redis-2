@@ -263,7 +263,7 @@ namespace data_handler
         {
             return "(error) ERR wrong number of arguments for 'del' command";
         }
-        std::scoped_lock locl(m_lock);
+        std::scoped_lock lock(m_lock);
 
         int delCount = 0;
         for(int idx = 1; idx < tokens.size(); idx++)
@@ -285,7 +285,7 @@ namespace data_handler
             return "(error) ERR wrong number of arguments for 'ttl' command";
         }
 
-        std::scoped_lock(m_lock);
+        std::scoped_lock lock(m_lock);
         if(dbKeys.find(tokens[1]) == dbKeys.end())
         {
             return "(integer) -2";
@@ -307,7 +307,103 @@ namespace data_handler
 
     string DB::HandleEXPIRE(vector<string>& tokens)
     {
-        return "EXPIRE";
+        if(tokens.size() < 3)
+        {
+            return "(error) ERR wrong number of arguments for 'expire' command";
+        }
+
+        bool hasNX = false, hasXX = false, hasGT = false, hasLT = false;
+
+        for(int idx = 3; idx < tokens.size(); idx++)
+        {
+            if(tokens[idx] == "NX")
+            {
+                hasNX = true;
+            }
+
+            if(tokens[idx] == "XX")
+            {
+                hasXX = true;
+            }
+
+            if(tokens[idx] == "GT")
+            {
+                hasGT = true;
+            }
+
+            if(tokens[idx] == "LT")
+            {
+                hasLT = true;
+            }
+        }
+
+        if(hasNX && (hasXX || hasGT || hasLT))
+        {
+            return "(error) ERR NX and XX, GT or LT options at the same time are not compatible";
+        }
+
+        if(hasGT && hasLT)
+        {
+            return "(error) ERR GT and LT options at the same time are not compatible";
+        }
+
+        if(!isValidNum(tokens[2]))
+        {
+            return "(error) ERR syntax error";
+        }
+
+        milliseconds ms_expiryDur = duration_cast<milliseconds>(seconds(stoi(tokens[2])));
+
+        if(ms_expiryDur == milliseconds::zero())
+        {
+            return "(error) ERR syntax error";
+        }
+        
+        ms_expiryDur += GetCurrTime();
+        string& key = tokens[1];
+        std::scoped_lock lock(m_lock);
+
+        if(dbKeys.find(key) == dbKeys.end() || hasExpired(key))
+        {
+            return "(integer) 0";
+        }
+
+        if(hasNX)
+        {
+            if(dbKeys[key].hasTTL())
+            {
+                return "(integer) 0";
+            }
+        }
+
+        if(hasXX)
+        {
+            if(!dbKeys[key].hasTTL())
+            {
+                return "(integer) 0";
+            }
+        }
+
+        if(hasGT)
+        {
+            if(!dbKeys[key].hasTTL() || (ms_expiryDur <= dbKeys[key].getExpiryTime()))
+            {
+                return "(integer) 0";
+            }
+        }
+
+        if(hasLT)
+        {
+            if(dbKeys[key].hasTTL() && (ms_expiryDur >= dbKeys[key].getExpiryTime()))
+            {
+                return "(integer) 0";
+            }
+        }
+
+        dbKeys[key].enableTTL();
+        dbKeys[key].setExpiryTime(ms_expiryDur);
+
+        return "(integer) 1";
     }
 
     string DB::HandleKEYS(vector<string>& tokens)
