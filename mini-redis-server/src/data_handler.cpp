@@ -210,9 +210,9 @@ namespace data_handler
 
         if(hasNX)
         {
-            if(dbKeys.find(key) == dbKeys.end())
+            if(dbKeys.find(key) != dbKeys.end() && !hasExpired(key))
             {
-                if(!hasExpired(key)) return "(nil)";
+                return "(nil)";
             }
         }
 
@@ -234,8 +234,6 @@ namespace data_handler
         if(hasEX || hasPX)
         {
             ms_expiryDur += GetCurrTime();
-            DEBUG("Setting expiry time");
-            //DEBUG(ms_expiryDur);
             dbKeys[key].enableTTL();
             dbKeys[key].setExpiryTime(ms_expiryDur);
         }
