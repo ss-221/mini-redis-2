@@ -71,6 +71,13 @@ namespace data_handler
         return temp;
     }
 
+    bool PatternMatch(const string& pattern, const string& str)
+    {
+        int retVal = fnmatch(pattern.c_str(), str.c_str(), 0);
+
+        return retVal == 0;
+    }
+
     string MetaData::getValue() const
     {
         return m_Value;
@@ -106,7 +113,7 @@ namespace data_handler
         m_ExpiryTime = ms;
     }
 
-    bool DB::hasExpired(string& key)
+    bool DB::hasExpired(const string& key)
     {
         milliseconds currTime = GetCurrTime();
         if(dbKeys[key].hasTTL() && currTime >= dbKeys[key].getExpiryTime())
@@ -408,6 +415,34 @@ namespace data_handler
 
     string DB::HandleKEYS(vector<string>& tokens)
     {
-        return "KEYS";
+        if(tokens.size() != 2)
+        {
+            return "(error) ERR wrong number of arguments for 'keys' command";
+        }
+
+        string keyNames = "\n";
+        int count = 0;
+        std::scoped_lock lock(m_lock);
+
+        for(auto it = dbKeys.begin(); it != dbKeys.end(); ++it)
+        {
+            if(!hasExpired(it->first))
+            {
+                if(PatternMatch(tokens[1], it->first))
+                {
+                    count++;
+                    keyNames += (std::to_string(count) + ") \"");
+                    keyNames += (it->first);
+                    keyNames += "\"\n";
+                }
+            }
+        }
+        keyNames.pop_back();
+        if(count == 0)
+        {
+            return "empty array";
+        }
+
+        return keyNames;
     }
 }

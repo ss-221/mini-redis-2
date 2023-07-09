@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <mutex>
 #include <algorithm>
+#include <fnmatch.h>
 
 namespace data_handler
 {
@@ -18,6 +19,7 @@ namespace data_handler
     std::string ProcessCommand(char*);
     milliseconds GetCurrTime();
     bool isValidNum(string&);
+    bool PatternMatch(const string&, const vector<string>&);
     
     class MetaData
     {
@@ -46,7 +48,7 @@ namespace data_handler
             string HandleTTL(vector<string>&);
             string HandleEXPIRE(vector<string>&);
             string HandleKEYS(vector<string>&);
-            bool hasExpired(string&);
+            bool hasExpired(const string&);
         private:
             std::mutex m_lock;
             std::unordered_map<string, MetaData> dbKeys;
