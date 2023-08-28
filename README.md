@@ -1,6 +1,6 @@
 # mini-redis-2
 
-A basic version of [Redis](https://redis.io/) written in C++ that supports a limited set of functions.
+A basic version of [Redis](https://redis.io/) 7.0 written in C++ that supports a limited set of functions.
 
 ## Steps to build it-
 Make a build folder and navigate to it
@@ -34,5 +34,3 @@ mini-redis-2/build/$ mini-redis-client/mini-redis-client 8080
 * keys
 
 The server and client can be closed using ctrl + c. The client can additionally be closed by passing "EXIT".
-
-(NOTE: set is supported based on Redis 6.0 i.e. GET, EXAT and PXAT flags are unavailable. The other commands support the same flags as in Redis 7.0)
