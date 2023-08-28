@@ -63,7 +63,6 @@ namespace data_handler
 
         else
         {
-            DEBUG("Invalid command");
             temp = "ERR unknown command ";
             temp += "'" + tokens.front() + "'";
         }
@@ -131,7 +130,7 @@ namespace data_handler
             return "(error) ERR wrong number of arguments for 'set' command";
         }
 
-        bool hasEX = false, hasPX = false, hasNX = false, hasXX = false, hasKeepTTL = false;
+        bool hasEX = false, hasPX = false, hasNX = false, hasXX = false, hasKeepTTL = false, hasEXAT = false, hasPXAT = false, hasGET = false;
         bool isValid = true;
         seconds s_expiryDur;
         milliseconds ms_expiryDur; 
@@ -148,7 +147,7 @@ namespace data_handler
                 hasXX = true;
             }
 
-            else if(tokens[idx] == "EX" || tokens[idx] == "PX")
+            else if(tokens[idx] == "EX" || tokens[idx] == "PX" || tokens[idx] == "EXAT" || tokens[idx] == "PXAT")
             {
                 if(idx == tokens.size() - 1)
                 {
@@ -163,7 +162,8 @@ namespace data_handler
                 if(tokens[idx] == "EX")
                 {
                     hasEX = true;
-                    seconds s_expiryDur = seconds(stoi(tokens[idx + 1]));
+                    seconds s_expiryDur = static_cast<seconds>(std::stoll(tokens[idx + 1]));
+
                     if(s_expiryDur == seconds::zero())
                     {
                         return "(error) ERR value is not an integer or out of range";
@@ -172,21 +172,53 @@ namespace data_handler
                     ms_expiryDur = duration_cast<milliseconds>(s_expiryDur);
                     idx += 1;
                 }
-                else
+                else if(tokens[idx] == "PX")
                 {
                     hasPX = true;
-                    ms_expiryDur = milliseconds(stoi(tokens[idx + 1]));
+                    ms_expiryDur = static_cast<milliseconds>(std::stoll(tokens[idx + 1]));
+
                     if(ms_expiryDur == seconds::zero())
                     {
                         return "(error) ERR value is not an integer or out of range";
                     }
+
                     idx += 1;
+                }
+                else if(tokens[idx] == "EXAT")
+                {
+                    hasEXAT = true;
+                    seconds s_expiryDur = static_cast<seconds>(std::stoll(tokens[idx + 1]));
+
+                    if(s_expiryDur < static_cast<seconds>(1))
+                    {
+                        return "(error) ERR invalid expire time in 'set' command";
+                    }
+                    
+                    ms_expiryDur = duration_cast<milliseconds>(s_expiryDur);
+                    idx += 1;
+                }
+                else if(tokens[idx] == "PXAT")
+                {
+                    hasPXAT = true;
+                    ms_expiryDur = static_cast<milliseconds>(std::stoll(tokens[idx + 1]));
+
+                    if(ms_expiryDur < static_cast<milliseconds>(1))
+                    {
+                        return "(error) ERR invalid expire time in 'set' command";
+                    }
+
+                    idx+= 1;
                 }
             }
 
             else if(tokens[idx] == "KEEPTTL")
             {
                 hasKeepTTL = true;
+            }
+
+            else if(tokens[idx] == "GET")
+            {
+                hasGET = true;
             }
 
             else
@@ -196,7 +228,15 @@ namespace data_handler
             }
         }
 
-        if((hasEX && hasPX) || (hasEX && hasKeepTTL) | (hasPX && hasKeepTTL))
+        int timeArgs = 0;
+        
+        timeArgs += (hasEX ? 1 : 0);
+        timeArgs += (hasPX ? 1 : 0);
+        timeArgs += (hasEXAT ? 1 : 0);
+        timeArgs += (hasPXAT ? 1 : 0);
+        timeArgs += (hasKeepTTL ? 1 : 0);
+
+        if(timeArgs > 1)
         {
             isValid = false;
         }
@@ -231,6 +271,15 @@ namespace data_handler
             }
         }
 
+        string keyVal;
+        if(hasGET)
+        {
+            vector<string> getCommand {"get", key};
+            m_lock.unlock();
+            keyVal = HandleGET(getCommand);
+            m_lock.lock();
+        }
+
         dbKeys[key].setValue(val);
 
         if(!hasKeepTTL)
@@ -238,14 +287,18 @@ namespace data_handler
             dbKeys[key].disableTTL();
         }
 
-        if(hasEX || hasPX)
+        if(hasEX || hasPX || hasEXAT || hasPXAT)
         {
-            ms_expiryDur += GetCurrTime();
+            if(hasEX || hasPX)
+            {
+                ms_expiryDur += GetCurrTime();
+            }
+            
             dbKeys[key].enableTTL();
             dbKeys[key].setExpiryTime(ms_expiryDur);
         }
         
-        return "ok";
+        return hasGET ? keyVal : "ok";
     }
 
     string DB::HandleGET(vector<string>& tokens)
